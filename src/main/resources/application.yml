@@ -11,8 +11,10 @@ eureka:
   server:
     waitTimeInMsWhenSyncEmpty: 5
 
-#example:
-  #location: config folder application.yml
+spring:
+  config:
+    import: 'optional:configserver:http://localhost:8071'
+
 management:
   endpoints:
     enabled-by-default: true
