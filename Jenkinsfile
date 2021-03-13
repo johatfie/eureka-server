@@ -2,8 +2,10 @@ node {
     def mvnHome
     stage('Preparation') {
         // fetch the code
-        git 'http://github.com/johatfie/config-server.git'
+        git 'http://github.com/johatfie/eureka-server.git'
         mvnHome = tool 'M2_HOME'
+
+        sh "env | sort"
     }
     stage('Build') {
         // Run the maven build
@@ -20,11 +22,11 @@ node {
         archiveArtifacts 'target/*.jar'
     }
     stage('Build image') {
-        sh "'${mvnHome}/bin/mvn' -Ddocker.image.prefix=326608040956.dkr.ecr.us-east-2.amazonaws.com/widgets-are-us -Dproject.artifactId=config-server -Ddocker.image.version=0.0.1-SNAPSHOT dockerfile:build"
+        sh "'${mvnHome}/bin/mvn' -Ddocker.image.prefix=326608040956.dkr.ecr.us-east-2.amazonaws.com/widgets-are-us -Dproject.artifactId=eureka-server -Ddocker.image.version=0.0.1-SNAPSHOT dockerfile:build"
     }
     stage('Push image') {
         docker.withRegistry('https://326608040956.dkr.ecr.us-east-2.amazonaws.com/widgets-are-us', 'ecr:us-east-2:ecr-user') {
-            sh "docker push 326608040956.dkr.ecr.us-east-2.amazonaws.com/widgets-are-us/config-server:0.0.1-SNAPSHOT"
+            sh "docker push 326608040956.dkr.ecr.us-east-2.amazonaws.com/widgets-are-us/eureka-server:0.0.1-SNAPSHOT"
         }
     }
     stage('Kubernetes deploy') {
@@ -34,9 +36,8 @@ node {
         //kubernetesDeploy configs: 'config-server-deployment.yaml', kubeConfig: [path: ''], kubeconfigId: 'kubeconfig', secretName: '', ssh: [sshCredentialsId: '*', sshServer: ''], textCredentials: [certificateAuthorityData: '', clientCertificateData: '', clientKeyData: '', serverUrl: 'https://']
 
         withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'kubeconfig file', namespace: '', serverUrl: '') {
-            sh "env | sort"
-            sh "sed -ie \"s/THIS_STRING_IS_REPLACED_DURING_BUILD/\$(date)/g\" config-server-deployment.yaml"
-            sh "/usr/local/bin/kubectl apply -f config-server-deployment.yaml"
+            sh "sed -ie \"s/THIS_STRING_IS_REPLACED_DURING_BUILD/\$(date)/g\" eureka-server-deployment.yaml"
+            sh "/usr/local/bin/kubectl apply -f eureka-server-deployment.yaml"
         }
     }
 
